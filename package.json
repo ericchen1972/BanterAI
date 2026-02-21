@@ -22,7 +22,7 @@
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
-      "panel": [
+      "activitybar": [
         {
           "id": "happycoding-explorer",
           "title": "HappyCoding",
@@ -35,7 +35,8 @@
         {
           "type": "webview",
           "id": "happycoding.chatView",
-          "name": "Team Chat"
+          "name": "Team Chat",
+          "icon": "$(comment-discussion)"
         }
       ]
     },
