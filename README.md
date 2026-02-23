@@ -8,6 +8,8 @@ The most powerful feature:
 It's so important that I said it three times. You can chat and send real-time messages with your teammates under the same Repo right within BanterAI.
 Of course, this alone isn't enough to explain BanterAI's true advantage.
 
+[![Watch the Demo](https://img.youtube.com/vi/KGurz3VGpdE/maxresdefault.jpg)](https://youtu.be/KGurz3VGpdE)
+
 ## The True Core: AI + MCP
 
 Through MCP (Model Context Protocol), you can tell the AI:
