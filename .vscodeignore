@@ -1,0 +1,17 @@
+.vscode/**
+.vscode-test/**
+out/test/**
+src/**
+.gitignore
+.yarnrc
+**/*.map
+**/*.ts
+*.config.js
+webpack.config.js
+tsconfig.json
+**/*.test.js
+test/**
+__tests__/**
+*.prettierrc
+tslint.json
+node_modules/**

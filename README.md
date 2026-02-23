@@ -1,12 +1,12 @@
-# HappyCoding
+# BanterAI
 
 The most powerful feature: 
 **Trash Talk.** 
 **Trash Talk.** 
 **Trash Talk.**
 
-It's so important that I said it three times. You can chat and send real-time messages with your teammates under the same Repo right within HappyCoding.
-Of course, this alone isn't enough to explain HappyCoding's true advantage.
+It's so important that I said it three times. You can chat and send real-time messages with your teammates under the same Repo right within BanterAI.
+Of course, this alone isn't enough to explain BanterAI's true advantage.
 
 ## The True Core: AI + MCP
 
@@ -55,7 +55,7 @@ Cross-border trash-talking, seamlessly integrated.
 Today in 2026, the amount of time we actually spend looking at code is far less than the time we spend discussing with teammates and AI. 
 Yet, we don't want to leave VSCode—that is our last remaining stubbornness as engineers.
 
-So, just use HappyCoding.
+So, just use BanterAI.
 
 ## Setup & Usage
 
@@ -65,18 +65,18 @@ So, just use HappyCoding.
 4. If you need to collaborate internationally, input the DeepL API URL / Key here.
 5. Select the code presentation theme for the chatroom.
 
-![Setup Step 1](https://github.com/ericchen1972/HappyCoding/blob/main/images/setting1.png?raw=true)
+![Setup Step 1](https://github.com/ericchen1972/BanterAI/blob/main/images/setting1.png?raw=true)
 
 6. Share your Ably Token and Message Encryption Key (if set) with your teammates.
 7. Once your teammates (including yourself) come online, you'll see a list of team members in the **Team Aliases** tab.
 8. Here, you can edit teammates' aliases and define the tone the AI should use when talking to them.
 9. If you want the AI to send messages to teammates dynamically, click the **Bind To AI Agent(MCP)** button. This button only needs to be clicked once—it applies to all future projects!
 
-![Setup Step 2](https://github.com/ericchen1972/HappyCoding/blob/main/images/setting2.png?raw=true)
+![Setup Step 2](https://github.com/ericchen1972/BanterAI/blob/main/images/setting2.png?raw=true)
 
 10. Click the **lightning ⚡** button to connect to the chatroom.
 11. Online teammates will be displayed on the right. Click a teammate's name to send a private message.
 12. Broadcast messages to everyone will be displayed in <span style="color: #f1c40f;">yellow text</span>.
 13. You can paste images directly into the text input box to upload and display them in the chatroom (images are kept for one hour).
 
-![Setup Step 3](https://github.com/ericchen1972/HappyCoding/blob/main/images/setting0.png?raw=true)
+![Setup Step 3](https://github.com/ericchen1972/BanterAI/blob/main/images/setting0.png?raw=true)

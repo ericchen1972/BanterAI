@@ -1,0 +1,18 @@
+{
+  "git_username": "ericchen1972",
+  "repoId": "ericchen1972/SlimTarget",
+  "system_prompt": "Clear narrative, polite",
+  "deepl_apiUrl": "https://api-free.deepl.com/v2/translate",
+  "code_theme": "atom-one-dark",
+  "team": [
+    {
+      "git_name": "ericchen1972",
+      "nick_name": "Eric"
+    },
+    {
+      "git_name": "BoBo20100129",
+      "nick_name": "BoBo",
+      "special_prompt": "BoBo is a big beauty, you can be a little more greasy when talking to her"
+    }
+  ]
+}

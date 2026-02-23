@@ -10,15 +10,17 @@ import * as crypto from 'crypto';
 let outputChannel: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext) {
-    outputChannel = vscode.window.createOutputChannel("HappyCoding");
-    outputChannel.appendLine('=== HappyCoding Extension Activating ===');
+    outputChannel = vscode.window.createOutputChannel("BanterAI");
+    outputChannel.appendLine('=== BanterAI Extension Activating ===');
     
     try {
         outputChannel.appendLine('Step 1: Creating Webview Provider...');
         // 1. 初始化 Webview Provider
-        const provider = new HappyCodingViewProvider(context.extensionUri);
+        const provider = new BanterAIViewProvider(context.extensionUri);
         context.subscriptions.push(
-            vscode.window.registerWebviewViewProvider(HappyCodingViewProvider.viewType, provider)
+            vscode.window.registerWebviewViewProvider(BanterAIViewProvider.viewType, provider, {
+                webviewOptions: { retainContextWhenHidden: true }
+            })
         );
         outputChannel.appendLine('✓ Webview Provider registered');
 
@@ -44,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(checkWorkspace));
 
         // 3. 註冊發送訊息指令
-        let sendMessageDisposable = vscode.commands.registerCommand('happycoding.sendMessage', async (target: string, content: string) => {
+        let sendMessageDisposable = vscode.commands.registerCommand('banterai.sendMessage', async (target: string, content: string) => {
             const workspaceFolders = vscode.workspace.workspaceFolders;
             if (!workspaceFolders) return;
             const workspaceRoot = workspaceFolders[0].uri.fsPath;
@@ -59,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
         // 如果只在 package.json 宣告但沒有在程式碼裡 registerTool，Copilot 會直接無視它。
         outputChannel.appendLine('Step 2: Registering Language Model Tool (Required for Copilot)...');
         
-        let toolExecuteDisposable = vscode.lm.registerTool('happycoding_send_message', {
+        let toolExecuteDisposable = vscode.lm.registerTool('banterai_send_message', {
             async invoke(options: vscode.LanguageModelToolInvocationOptions<{ to: string, content: string }>, _token: vscode.CancellationToken) {
                 const args = options.input;
                 outputChannel.appendLine(`[Tool Invoke] Tool triggered by AI with args: ${JSON.stringify(args)}`);
@@ -71,7 +73,7 @@ export function activate(context: vscode.ExtensionContext) {
                 const config = readConfig(workspaceRoot);
                 
                 if (!config || !config.ably_apiKey || !config.repoId) {
-                    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart('Error: HappyCoding not configured')]);
+                    return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart('Error: BanterAI not configured')]);
                 }
 
                 try {
@@ -99,28 +101,28 @@ export function activate(context: vscode.ExtensionContext) {
             }
         });
         context.subscriptions.push(toolExecuteDisposable);
-        outputChannel.appendLine('✓ Tool "happycoding_send_message" registered programmatically');
+        outputChannel.appendLine('✓ Tool "banterai_send_message" registered programmatically');
 
 
 
-    let setupDisposable = vscode.commands.registerCommand('happycoding.setup', async () => {
+    let setupDisposable = vscode.commands.registerCommand('banterai.setup', async () => {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (workspaceFolders) {
             const root = workspaceFolders[0].uri.fsPath;
             initProject(root); // Ensure files exist
-            HappyCodingSettingsPanel.createOrShow(context.extensionUri, root);
+            BanterAISettingsPanel.createOrShow(context.extensionUri, root);
         } else {
             const result = await vscode.window.showOpenDialog({ canSelectFolders: true });
             if (result && result[0]) {
                 initProject(result[0].fsPath);
-                HappyCodingSettingsPanel.createOrShow(context.extensionUri, result[0].fsPath);
+                BanterAISettingsPanel.createOrShow(context.extensionUri, result[0].fsPath);
             }
         }
     });
 
     context.subscriptions.push(sendMessageDisposable, setupDisposable);
     
-    outputChannel.appendLine('=== HappyCoding Extension Activated Successfully ===');
+    outputChannel.appendLine('=== BanterAI Extension Activated Successfully ===');
     outputChannel.appendLine(`Total registered disposables: ${context.subscriptions.length}`);
     } catch (error: any) {
         outputChannel.appendLine(`❌ ERROR during activation: ${error.message}`);
@@ -128,8 +130,8 @@ export function activate(context: vscode.ExtensionContext) {
     }
 }
 
-class HappyCodingSettingsPanel {
-    public static currentPanel: HappyCodingSettingsPanel | undefined;
+class BanterAISettingsPanel {
+    public static currentPanel: BanterAISettingsPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
 
@@ -146,8 +148,8 @@ class HappyCodingSettingsPanel {
                     this._bindMcp();
                     return;
                 case 'previewTheme':
-                    if (HappyCodingViewProvider.currentView) {
-                        HappyCodingViewProvider.currentView.changeTheme(message.theme);
+                    if (BanterAIViewProvider.currentView) {
+                        BanterAIViewProvider.currentView.changeTheme(message.theme);
                     }
                     return;
             }
@@ -245,12 +247,12 @@ class HappyCodingSettingsPanel {
                     mcpConfig[targetKey] = {};
                 }
 
-                mcpConfig[targetKey]['happycoding'] = mcpServerConfig;
+                mcpConfig[targetKey]['banterai'] = mcpServerConfig;
                 fs.writeFileSync(configPath, JSON.stringify(mcpConfig, null, 2));
                 boundCount++;
             }
 
-            vscode.window.showInformationMessage(`HappyCoding MCP Server successfully bound to ${boundCount} AI Agents!`);
+            vscode.window.showInformationMessage(`BanterAI MCP Server successfully bound to ${boundCount} AI Agents!`);
         } catch (error: any) {
             vscode.window.showErrorMessage('Failed to bind MCP server: ' + error.message);
         }
@@ -259,17 +261,17 @@ class HappyCodingSettingsPanel {
     public static createOrShow(extensionUri: vscode.Uri, workspaceRoot: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
-        if (HappyCodingSettingsPanel.currentPanel) {
-            HappyCodingSettingsPanel.currentPanel._panel.reveal(column);
+        if (BanterAISettingsPanel.currentPanel) {
+            BanterAISettingsPanel.currentPanel._panel.reveal(column);
             return;
         }
 
-        const panel = vscode.window.createWebviewPanel('happycodingSettings', 'HappyCoding Settings', column || vscode.ViewColumn.One, {
+        const panel = vscode.window.createWebviewPanel('banteraiSettings', 'BanterAI Settings', column || vscode.ViewColumn.One, {
             enableScripts: true,
             localResourceRoots: [extensionUri]
         });
 
-        HappyCodingSettingsPanel.currentPanel = new HappyCodingSettingsPanel(panel, extensionUri, workspaceRoot);
+        BanterAISettingsPanel.currentPanel = new BanterAISettingsPanel(panel, extensionUri, workspaceRoot);
     }
 
     private _saveConfig(data: any) {
@@ -285,14 +287,14 @@ class HappyCodingSettingsPanel {
         delete data.deepl_apiKey;
         delete data.message_key;
 
-        const configPath = path.join(this._workspaceRoot, '.happycoding', 'config.json');
+        const configPath = path.join(this._workspaceRoot, '.banterai', 'config.json');
         fs.writeFileSync(configPath, JSON.stringify(data, null, 2));
-        vscode.window.showInformationMessage('HappyCoding: Configuration saved successfully (Secrets stored globally)!');
+        vscode.window.showInformationMessage('BanterAI: Configuration saved successfully (Secrets stored globally)!');
         this.dispose();
     }
 
     public dispose() {
-        HappyCodingSettingsPanel.currentPanel = undefined;
+        BanterAISettingsPanel.currentPanel = undefined;
         this._panel.dispose();
         while (this._disposables.length) {
             const x = this._disposables.pop();
@@ -342,7 +344,7 @@ class HappyCodingSettingsPanel {
             </style>
         </head>
         <body>
-            <h2>HappyCoding Setup</h2>
+            <h2>BanterAI Setup</h2>
             <div class="tabs">
                 <div class="tab active" data-target="general">General Settings</div>
                 <div class="tab" data-target="team">Team Aliases</div>
@@ -443,9 +445,9 @@ class HappyCodingSettingsPanel {
     }
 }
 
-class HappyCodingViewProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = 'happycoding.chatView';
-    public static currentView?: HappyCodingViewProvider;
+class BanterAIViewProvider implements vscode.WebviewViewProvider {
+    public static readonly viewType = 'banterai.chatView';
+    public static currentView?: BanterAIViewProvider;
     private _view?: vscode.WebviewView;
     private _realtime?: Ably.Realtime;
 
@@ -462,13 +464,13 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
     }
 
     public resolveWebviewView(webviewView: vscode.WebviewView, _context: vscode.WebviewViewResolveContext, _token: vscode.CancellationToken) {
-        HappyCodingViewProvider.currentView = this;
+        BanterAIViewProvider.currentView = this;
         this._view = webviewView;
         webviewView.webview.options = { enableScripts: true, localResourceRoots: [this._extensionUri] };
         webviewView.webview.onDidReceiveMessage(data => {
             switch (data.type) {
                 case 'openSettings':
-                    vscode.commands.executeCommand('happycoding.setup');
+                    vscode.commands.executeCommand('banterai.setup');
                     break;
                 case 'connect':
                     this.connectToAbly();
@@ -531,6 +533,17 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
             }
         });
         this._updateHtml();
+        
+        if (this._realtime && this._realtime.connection.state === 'connected') {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders) {
+                const root = workspaceFolders[0].uri.fsPath;
+                const config = readConfig(root);
+                setTimeout(() => {
+                    this._resyncUIOnReconnect(config, root);
+                }, 500);
+            }
+        }
     }
 
     private _updateHtml() {
@@ -627,7 +640,10 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
                         </div>
                     </div>
                     <div id="users">
-                        <div style="opacity:0.5; font-size:11px;">Disconnected</div>
+                        ${isConnected 
+                            ? '<div style="opacity:0.5; font-size:11px;">Restoring connection...</div>'
+                            : '<div style="opacity:0.5; font-size:11px;">Disconnected</div>'
+                        }
                     </div>
                 </div>
                 <script>
@@ -922,7 +938,7 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
         try {
             const workspaceFolders = vscode.workspace.workspaceFolders;
             if (workspaceFolders) {
-                const statePath = path.join(workspaceFolders[0].uri.fsPath, '.happycoding', '.connected');
+                const statePath = path.join(workspaceFolders[0].uri.fsPath, '.banterai', '.connected');
                 if (fs.existsSync(statePath)) {
                     fs.unlinkSync(statePath);
                 }
@@ -939,7 +955,7 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
         const config = readConfig(root);
 
         if (!config.git_username || !config.repoId || !config.ably_apiKey) {
-            vscode.window.showErrorMessage('HappyCoding: Missing required settings! Check settings.');
+            vscode.window.showErrorMessage('BanterAI: Missing required settings! Check settings.');
             return;
         }
 
@@ -951,7 +967,7 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
                 outputChannel.appendLine(`SUCCESS: Connected to ${config.repoId}`);
                 
                 try {
-                    const happyDir = path.join(root, '.happycoding');
+                    const happyDir = path.join(root, '.banterai');
                     if (!fs.existsSync(happyDir)) fs.mkdirSync(happyDir, { recursive: true });
                     fs.writeFileSync(path.join(happyDir, '.connected'), 'true');
                 } catch(e) {}
@@ -990,8 +1006,8 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
             });
 
             if (teamChanged) {
-                fs.writeFileSync(path.join(root, '.happycoding', 'config.json'), JSON.stringify(currentConfig, null, 2));
-                if (HappyCodingSettingsPanel.currentPanel) HappyCodingSettingsPanel.currentPanel.refresh();
+                fs.writeFileSync(path.join(root, '.banterai', 'config.json'), JSON.stringify(currentConfig, null, 2));
+                if (BanterAISettingsPanel.currentPanel) BanterAISettingsPanel.currentPanel.refresh();
             }
 
             this._view?.webview.postMessage({ type: 'presenceUpdate', members: mappedMembers });
@@ -1057,6 +1073,62 @@ class HappyCodingViewProvider implements vscode.WebviewViewProvider {
 
         // --- Message Receiving (Live) ---
         channel.subscribe('message', processMessage);
+    }
+
+    private async _resyncUIOnReconnect(config: any, root: string) {
+        if (!this._realtime || !this._view) return;
+        const channel = this._realtime.channels.get(config.repoId);
+
+        // Fetch presence
+        try {
+            const members = await channel.presence.get();
+            let currentConfig = readConfig(root);
+            const mappedMembers = members.map(m => {
+                let teamMember = (currentConfig.team || []).find((t: any) => t.git_name === m.clientId || t.git_username === m.clientId);
+                return { git: m.clientId, nick: teamMember?.nick_name || m.clientId };
+            });
+            this._view.webview.postMessage({ type: 'presenceUpdate', members: mappedMembers });
+        } catch(e) {}
+
+        // Fetch history
+        try {
+            const resultPage = await channel.history({ limit: 30, direction: 'backwards' });
+            if (resultPage && resultPage.items && resultPage.items.length > 0) {
+                const historyMessages = resultPage.items.slice().reverse();
+                
+                historyMessages.forEach(msg => {
+                    const data = msg.data;
+                    if (!data || !data.from || !data.to || !data.content) return;
+                    let decryptedContent = data.content;
+                    if (config.message_key && config.message_key.trim() !== '' && typeof data.content === 'string') {
+                        decryptedContent = decryptMessage(data.content, config.message_key);
+                    }
+                    let decryptedCode = data.code;
+                    if (data.code && typeof data.code === 'string' && config.message_key && config.message_key.trim() !== '') {
+                        decryptedCode = decryptMessage(data.code, config.message_key);
+                    }
+                    if (data.to === 'all' || data.to === config.git_username || data.from === config.git_username) {
+                        const senderConfig = (config.team || []).find((t: any) => t.git_name === data.from || t.git_username === data.from);
+                        const senderName = senderConfig?.nick_name || data.from;
+                        let displayName = senderName;
+                        if (data.is_agent) displayName = `Agent ${displayName}`;
+
+                        this._view?.webview.postMessage({ 
+                            type: 'newMsg', 
+                            from: displayName, 
+                            to: data.to,
+                            text: decryptedContent,
+                            code: decryptedCode,
+                            imageUrl: data.imageUrl,
+                            gitUser: data.from,
+                            isMe: data.from === config.git_username,
+                            isAgent: !!data.is_agent
+                        });
+                    }
+                });
+                this._view.webview.postMessage({ type: 'newMsg', from: 'System', text: '--- End of history messages ---', isSystem: true });
+            }
+        } catch(e) {}
     }
 
     public async postMessageToAbly(target: string, content: string, config: any, imageUrl?: string) {
@@ -1161,7 +1233,7 @@ function getGitInfo(root: string) {
 
 function initProject(root: string, force: boolean = false) {
     outputChannel.appendLine(`Initializing project at ${root}...`);
-    const dotHappyDir = path.join(root, '.happycoding');
+    const dotHappyDir = path.join(root, '.banterai');
     if (!fs.existsSync(dotHappyDir)) fs.mkdirSync(dotHappyDir);
 
     const { username, repoName } = getGitInfo(root);
@@ -1188,13 +1260,13 @@ function checkAndInjectCursorRules(root: string) {
     const cursorRulesPath = path.join(root, '.cursorrules');
     const cliPath = path.join(root, 'out', 'cli.js');
     const ruleContent = `
-# --- HappyCoding Intelligence ---
+# --- BanterAI Intelligence ---
 當用戶請你傳送訊息 (例如「告訴 Judy...」或「@Judy...」或「跟大家講...」) 時：
 1. 你 **絕對不可** 敷衍了事說「好我發了」卻無實際行動，必須使用 \`run_command\` 工具在終端機執行發送腳本。
 2. 執行指令：\`node ${cliPath} --to "<收件人>" --content "<訊息>"\`
 3. 收件人 \`<收件人>\`:
    - 若為廣播，填寫 "all"。
-   - 若為私訊，填寫該隊友的 \`git_username\` (請至 \`.happycoding/config.json\` 內查找對應之 \`git_username\`)。
+   - 若為私訊，填寫該隊友的 \`git_username\` (請至 \`.banterai/config.json\` 內查找對應之 \`git_username\`)。
 4. 訊息 \`<訊息>\`:
    - 若為私訊且在 \`config.json\` 中設有 \`special_prompt\` 人設，請依該人設 "**改寫**" 訊息內容，並在開頭加上 \`[你的名字] Agent: \`。
    - 若使用 \`@\` 開頭，代表用戶直發，不可改寫內容，請將 \`<訊息>\` 直接設定為用戶原句。
@@ -1205,12 +1277,12 @@ function checkAndInjectCursorRules(root: string) {
     // Auto-overwrite if it doesn't contain the updated rules
     if (fs.existsSync(cursorRulesPath)) {
         const content = fs.readFileSync(cursorRulesPath, 'utf8');
-        if (!content.includes('HappyCoding Intelligence')) {
+        if (!content.includes('BanterAI Intelligence')) {
             fs.appendFileSync(cursorRulesPath, '\\n' + ruleContent);
             outputChannel.appendLine('.cursorrules appended.');
         } else if (!content.includes('node ')) {
             // Force update old rules
-            const updated = content.replace(/# --- HappyCoding Intelligence ---[\\s\\S]*?# --- End ---/, ruleContent.trim());
+            const updated = content.replace(/# --- BanterAI Intelligence ---[\\s\\S]*?# --- End ---/, ruleContent.trim());
             fs.writeFileSync(cursorRulesPath, updated);
             outputChannel.appendLine('.cursorrules updated.');
         }
@@ -1221,7 +1293,7 @@ function checkAndInjectCursorRules(root: string) {
 }
 
 function getSecretsPath(): string {
-    return path.join(os.homedir(), '.happycoding', 'secrets.json');
+    return path.join(os.homedir(), '.banterai', 'secrets.json');
 }
 
 function readSecrets(): any {
@@ -1244,7 +1316,7 @@ function writeSecrets(secrets: any) {
 }
 
 function readConfig(root: string): any {
-    const configPath = path.join(root, '.happycoding', 'config.json');
+    const configPath = path.join(root, '.banterai', 'config.json');
     let config: any = null;
     if (fs.existsSync(configPath)) {
         try {
